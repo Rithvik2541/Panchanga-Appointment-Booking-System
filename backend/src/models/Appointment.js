@@ -16,12 +16,12 @@ const appointmentSchema = new mongoose.Schema({
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Hero',
+    ref: 'User',
     required: [true, 'User ID is required'],
   },
   consultantId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Hero',
+    ref: 'Consultant',
     required: [true, 'Consultant ID is required'],
   },
   appointmentDate: {

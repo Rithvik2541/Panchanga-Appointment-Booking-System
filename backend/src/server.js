@@ -10,7 +10,7 @@ const connectDB = require('./config/db');
 const { PORT, NODE_ENV } = require('./config/env');
 const { initChatSocket } = require('./sockets/chatSocket'); 
 const { startReminderJob } = require('./jobs/reminderJob');
-const { startCleanupJob } = require('./jobs/cleanupJob');
+const { startCleanupJob } = require('./jobs/cleanupJob'); 
 
 /** 
  * Start the server
