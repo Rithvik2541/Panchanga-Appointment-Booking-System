@@ -32,6 +32,30 @@ const getAppointments = async (req, res, next) => {
 };
 
 /**
+ * Get all admin users
+ * GET /api/admin/users
+ */
+const getAdminUsers = async (req, res, next) => {
+  try {
+    const User = require('../models/User');
+    
+    // Find all users with role ADMIN, excluding the current user
+    const admins = await User.find(
+      { role: 'ADMIN', _id: { $ne: req.user.id } },
+      { hashedPassword: 0, otpCode: 0, otpExpiresAt: 0 }
+    ).sort({ username: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: admins,
+      count: admins.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Update appointment status
  * PATCH /api/admin/appointments/:id
  * Body: { status }
@@ -75,4 +99,5 @@ const updateAppointmentStatus = async (req, res, next) => {
 module.exports = {
   getAppointments,
   updateAppointmentStatus,
+  getAdminUsers,
 };

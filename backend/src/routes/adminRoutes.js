@@ -22,6 +22,13 @@ router.use(checkRole(['ADMIN']));
 router.get('/appointments', adminController.getAppointments);
 
 /**
+ * @route   GET /api/admin/users
+ * @desc    Get all admin users (excluding current user)
+ * @access  Private (ADMIN)
+ */
+router.get('/users', adminController.getAdminUsers);
+
+/**
  * @route   PATCH /api/admin/appointments/:id
  * @desc    Update appointment status
  * @access  Private (ADMIN)

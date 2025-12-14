@@ -137,8 +137,12 @@ const getAppointmentsForAdmin = async (filters = {}) => {
       };
     }
 
-    // Filter by consultant
+    // Filter by consultant - validate ObjectId format
     if (filters.consultantId) {
+      const mongoose = require('mongoose');
+      if (!mongoose.Types.ObjectId.isValid(filters.consultantId)) {
+        throw new Error('Invalid consultant ID format');
+      }
       query.consultantId = filters.consultantId;
     }
 
