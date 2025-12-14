@@ -6,9 +6,9 @@
 const authService = require('../services/authService');
 
 /**
- * Register a new user
+ * Register a new user or consultant
  * POST /api/auth/register
- * Body: { mail, username, password }
+ * Body: { mail, username, password, role, specialization (optional for CONSULTANT) }
  */
 const register = async (req, res, next) => {
   try {
@@ -19,7 +19,7 @@ const register = async (req, res, next) => {
       bodyKeys: req.body ? Object.keys(req.body) : 'no body'
     });
 
-    const { mail, username, password } = req.body;
+    const { mail, username, password, role, specialization } = req.body;
 
     // Validation
     if (!mail || !username || !password) {
@@ -36,11 +36,17 @@ const register = async (req, res, next) => {
       });
     }
 
-    const result = await authService.register(mail, username, password);
+    // Validate role
+    const userRole = role && ['USER', 'CONSULTANT'].includes(role.toUpperCase()) 
+      ? role.toUpperCase() 
+      : 'USER';
+
+    const result = await authService.register(mail, username, password, userRole, specialization);
 
     res.status(201).json({
       success: true,
       message: result.message,
+      role: result.role,
     });
   } catch (error) {
     next(error);
@@ -76,9 +82,9 @@ const verifyOtp = async (req, res, next) => {
 };
 
 /**
- * Login user
+ * Login user or consultant
  * POST /api/auth/login
- * Body: { mail, password }
+ * Body: { mail, password, role }
  */
 const login = async (req, res, next) => {
   try {
@@ -89,7 +95,7 @@ const login = async (req, res, next) => {
       bodyKeys: req.body ? Object.keys(req.body) : 'no body'
     });
 
-    const { mail, password } = req.body;
+    const { mail, password, role } = req.body;
 
     // Validation
     if (!mail || !password) {
@@ -99,7 +105,12 @@ const login = async (req, res, next) => {
       });
     }
 
-    const result = await authService.login(mail, password);
+    // Validate role
+    const userRole = role && ['USER', 'CONSULTANT'].includes(role.toUpperCase()) 
+      ? role.toUpperCase() 
+      : 'USER';
+
+    const result = await authService.login(mail, password, userRole);
 
     res.status(200).json({
       success: true,

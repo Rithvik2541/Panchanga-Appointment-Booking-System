@@ -32,7 +32,7 @@ Expected response:
 
 ## 2. User Registration Flow
 
-### Step 1: Register a new user
+### Step 1: Register a new user (Role: USER)
 
 ```bash
 curl -X POST http://localhost:5000/api/auth/register \
@@ -40,15 +40,44 @@ curl -X POST http://localhost:5000/api/auth/register \
   -d '{
     "mail": "testuser@example.com",
     "username": "Test User",
-    "password": "password123"
+    "password": "password123",
+    "role": "USER"
   }'
 ```
+
+**Note:** The `role` field is optional and defaults to `USER`. Valid values: `USER` or `CONSULTANT`.
 
 Expected response:
 ```json
 {
   "success": true,
-  "message": "Registration successful. Please check your email for OTP verification code."
+  "message": "Registration successful as USER. Please check your email for OTP verification code.",
+  "role": "USER"
+}
+```
+
+### Step 1b: Register a new consultant (Role: CONSULTANT)
+
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mail": "consultant@example.com",
+    "username": "Dr. Smith",
+    "password": "password123",
+    "role": "CONSULTANT",
+    "specialization": "Cardiology"
+  }'
+```
+
+**Note:** The `specialization` field is optional and only used for consultants.
+
+Expected response:
+```json
+{
+  "success": true,
+  "message": "Registration successful as CONSULTANT. Please check your email for OTP verification code.",
+  "role": "CONSULTANT"
 }
 ```
 
@@ -77,14 +106,31 @@ Expected response:
 
 ### Step 3: Login
 
+**For User:**
+
 ```bash
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "mail": "testuser@example.com",
-    "password": "password123"
+    "password": "password123",
+    "role": "USER"
   }'
 ```
+
+**For Consultant:**
+
+```bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mail": "consultant@example.com",
+    "password": "password123",
+    "role": "CONSULTANT"
+  }'
+```
+
+**Note:** The `role` field is required and must match the role you registered with. Valid values: `USER` or `CONSULTANT`.
 
 Expected response:
 ```json
@@ -104,49 +150,77 @@ Expected response:
 
 **Save the token** - you'll need it for authenticated requests!
 
-## 3. Create Admin and Consultant Users
+## 3. Consultant Management
 
-Before testing appointments, you need consultants.
-
-### Register another user (for consultant)
+### Get All Consultants (Public - No Auth Required)
 
 ```bash
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "mail": "consultant@example.com",
-    "username": "Dr. Smith",
-    "password": "password123"
-  }'
+curl -X GET http://localhost:5000/api/consultants
 ```
 
-Verify OTP and then **manually update role in MongoDB:**
+Expected response:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "675698a1b2c3d4e5f6789013",
+      "mail": "consultant@example.com",
+      "username": "Dr. Smith",
+      "role": "CONSULTANT",
+      "specialization": "Cardiology",
+      "isVerified": true,
+      "createdAt": "2025-12-14T...",
+      "updatedAt": "2025-12-14T..."
+    }
+  ],
+  "count": 1
+}
+```
+
+### Get Consultant by ID (Public - No Auth Required)
+
+```bash
+curl -X GET http://localhost:5000/api/consultants/CONSULTANT_ID_HERE
+```
+
+Replace `CONSULTANT_ID_HERE` with the actual consultant's MongoDB _id.
+
+Expected response:
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "675698a1b2c3d4e5f6789013",
+    "mail": "consultant@example.com",
+    "username": "Dr. Smith",
+    "role": "CONSULTANT",
+    "specialization": "Cardiology",
+    "isVerified": true,
+    "createdAt": "2025-12-14T...",
+    "updatedAt": "2025-12-14T..."
+  }
+}
+```
+
+## 4. Create Admin User
+
+Admin users must be created manually in MongoDB (for security):
 
 ```javascript
 // In MongoDB shell or Compass
-use appointment-booking
+use appointment-booking (get from `/api/consultants`)
 
-// Make the user a consultant
-db.heroes.updateOne(
-  { mail: "consultant@example.com" },
-  { $set: { role: "CONSULTANT" } }
-)
-
-// Create an admin user
-db.heroes.updateOne(
-  { mail: "admin@example.com" },  // Register this user first!
+// First register a user normally, then update to ADMIN role
+db.users.updateOne(
+  { mail: "admin@example.com" },
   { $set: { role: "ADMIN" } }
 )
 ```
 
-**Get the consultant's ID** (you'll need it for booking):
+**Note:** Admins are in the `users` collection, not a separate collection.
 
-```javascript
-db.heroes.findOne({ mail: "consultant@example.com" })
-// Copy the _id field
-```
-
-## 4. Book an Appointment
+## 5. Book an Appointment
 
 Use the USER token from step 2.
 
@@ -166,7 +240,7 @@ Replace:
 - `CONSULTANT_MONGODB_ID_HERE` with the consultant's MongoDB _id
 - Date must be a future weekday (Monday-Friday)
 - Time must be HH:mm format, between 10:00-17:30
-
+6
 Expected response:
 ```json
 {
@@ -222,7 +296,7 @@ Expected response:
 }
 ```
 
-## 6. Admin: View All Appointments
+## 7. Admin: View All Appointments
 
 Login as admin first, then:
 
@@ -244,7 +318,7 @@ curl -X GET "http://localhost:5000/api/admin/appointments?date=2025-12-16&status
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN_HERE"
 ```
 
-## 7. Admin: Confirm Appointment
+## 8. Admin: Confirm Appointment
 
 ```bash
 curl -X PATCH http://localhost:5000/api/admin/appointments/APPOINTMENT_ID_HERE \
@@ -268,7 +342,7 @@ Expected response:
 }
 ```
 
-## 8. Test Appointment Cancellation
+## 9. Test Appointment Cancellation
 
 ### As User:
 
@@ -288,7 +362,7 @@ Expected response:
 }
 ```
 
-## 9. Test Business Rules
+## 10. Test Business Rules
 
 ### Test 1: Invalid Time Slot (not 30-min interval)
 
@@ -347,7 +421,7 @@ Try to book 4 appointments on the same day:
 
 Expected: Error after the 3rd appointment
 
-## 10. Test Socket.IO Chat
+## 11. Test Socket.IO Chat
 
 ### Using JavaScript Client
 
@@ -407,7 +481,7 @@ socket.on('user_typing', (data) => {
 socket.emit('stop_typing', { toUserId: 'RECIPIENT_USER_ID' });
 ```
 
-## 11. Test Automated Jobs
+## 12. Test Automated Jobs
 
 ### Test Reminder Job
 
@@ -434,7 +508,7 @@ socket.emit('stop_typing', { toUserId: 'RECIPIENT_USER_ID' });
 3. Check server logs - should see "Marked X appointments as COMPLETED"
 4. Verify in MongoDB that status changed to COMPLETED
 
-## 12. Test Error Handling
+## 13. Test Error Handling
 
 ### Invalid JWT
 
@@ -524,11 +598,15 @@ You can import this JSON into Postman:
 - [ ] Server starts without errors
 - [ ] MongoDB connected successfully
 - [ ] Health check returns 200 OK
-- [ ] User registration works
+- [ ] User registration works (with role selection)
+- [ ] Consultant registration works
 - [ ] OTP email received
-- [ ] OTP verification works
-- [ ] Login returns JWT token
-- [ ] Consultant user created in MongoDB
+- [ ] OTP verification works for both users and consultants
+- [ ] User login returns JWT token
+- [ ] Consultant login returns JWT token (with role="CONSULTANT")
+- [ ] Get all consultants (public endpoint works)
+- [ ] Get consultant by ID works
+- [ ] Admin user created manually in MongoDB
 - [ ] Appointment booking succeeds
 - [ ] Business rules enforced (time slots, limits, etc.)
 - [ ] Admin can view all appointments
@@ -538,6 +616,80 @@ You can import this JSON into Postman:
 - [ ] Messages sent and received in real-time
 - [ ] Reminder job logs activity
 - [ ] Cleanup job logs activity
+
+## 🎉 New Collections Structure
+
+### Database: `appointment-booking`
+
+**Collections:**
+
+1. **users** - Regular users and admins
+   - Fields: mail, username, hashedPassword, role (USER or ADMIN), otpCode, otpExpiresAt, isVerified
+   - Used for: Regular users booking appointments, admin management
+
+2. **consultants** - Consultants only
+   - Fields: mail, username, hashedPassword, role (always CONSULTANT), otpCode, otpExpiresAt, isVerified, specialization
+   - Used for: Service providers who offer appointments
+
+3. **appointments** - Appointment bookings
+   - References both users and consultants collections
+
+## 🔑 Key Changes from Previous Version
+
+### Before (Single Hero Collection):
+- All users (USER, ADMIN, CONSULTANT) in one `heroes` collection
+- Role determined by field value
+- Consultants manually created by updating role in MongoDB
+
+### After (Separate Collections):
+- **users** collection for USER and ADMIN roles
+- **consultants** collection for CONSULTANT role
+- Role selected during registration
+- No manual MongoDB updates needed (except for ADMIN)
+
+### API Changes:
+
+**Registration:**
+```json
+// OLD - No role selection
+POST /api/auth/register
+{
+  "mail": "user@example.com",
+  "username": "User",
+  "password": "password123"
+}
+
+// NEW - Role selection
+POST /api/auth/register
+{
+  "mail": "user@example.com",
+  "username": "User",
+  "password": "password123",
+  "role": "USER"  // or "CONSULTANT"
+}
+```
+
+**Login:**
+```json
+// OLD - No role specification
+POST /api/auth/login
+{
+  "mail": "user@example.com",
+  "password": "password123"
+}
+
+// NEW - Role must match registration
+POST /api/auth/login
+{
+  "mail": "user@example.com",
+  "password": "password123",
+  "role": "USER"  // or "CONSULTANT"
+}
+```
+
+**New Endpoints:**
+- `GET /api/consultants` - Get all verified consultants (public)
+- `GET /api/consultants/:id` - Get consultant by ID (public)
 
 ## Troubleshooting
 

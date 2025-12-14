@@ -8,6 +8,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const consultantRoutes = require('./routes/consultantRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 // Initialize Express app
@@ -44,6 +45,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/consultants', consultantRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res, next) => {

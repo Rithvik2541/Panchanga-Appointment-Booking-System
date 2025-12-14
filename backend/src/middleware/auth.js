@@ -40,6 +40,7 @@ const auth = async (req, res, next) => {
       id: decoded.id,
       role: decoded.role,
       username: decoded.username,
+      collection: decoded.collection || 'users', // Default to users if not specified
     };
 
     next();

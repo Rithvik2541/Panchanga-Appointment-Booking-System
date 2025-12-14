@@ -4,7 +4,8 @@
  */
 
 const Appointment = require('../models/Appointment');
-const Hero = require('../models/Hero');
+const User = require('../models/User');
+const Consultant = require('../models/Consultant');
 const {
   combineDateTime,
   isWithinWorkingHours,
@@ -29,19 +30,22 @@ const createAppointment = async (user, appointmentData) => {
   try {
     const { consultantId, appointmentDate, appointmentTime } = appointmentData;
 
-    // Get full user details
-    const userDetails = await Hero.findById(user.id);
+    // Get full user details from appropriate collection
+    let userDetails;
+    if (user.collection === 'consultants') {
+      userDetails = await Consultant.findById(user.id);
+    } else {
+      userDetails = await User.findById(user.id);
+    }
+    
     if (!userDetails) {
       throw new Error('User not found');
     }
 
-    // Verify consultant exists and has correct role
-    const consultant = await Hero.findById(consultantId);
+    // Verify consultant exists
+    const consultant = await Consultant.findById(consultantId);
     if (!consultant) {
       throw new Error('Consultant not found');
-    }
-    if (consultant.role !== 'CONSULTANT' && consultant.role !== 'ADMIN') {
-      throw new Error('Selected user is not a consultant');
     }
 
     // 1. Convert appointmentDate + appointmentTime to slotStart and slotEnd
