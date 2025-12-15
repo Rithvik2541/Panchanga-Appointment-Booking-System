@@ -1,17 +1,7 @@
-/**
- * Cleanup Job
- * 1. Auto-marks CONFIRMED appointments as COMPLETED after they end
- * 2. Deletes old COMPLETED appointments (30 days retention)
- * Runs every 10 minutes
- */
-
 const cron = require('node-cron');
 const Appointment = require('../models/Appointment');
 const { STATUSES, COMPLETED_RETENTION_DAYS } = require('../utils/constants');
-
-/**
- * Mark appointments as COMPLETED if their end time has passed
- */
+ // Mark appointments as COMPLETED if their end time has passed
 const markCompletedAppointments = async () => {
   try {
     const now = new Date();
@@ -34,15 +24,11 @@ const markCompletedAppointments = async () => {
     console.error('❌ Error marking completed appointments:', error.message);
   }
 };
-
-/**
- * Delete old COMPLETED appointments (older than 30 days)
- */
+ //Delete old COMPLETED appointments (older than 30 days)
 const deleteOldCompletedAppointments = async () => {
   try {
     const now = new Date();
     const retentionDate = new Date(now.getTime() - COMPLETED_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-
     // Delete appointments that are COMPLETED and ended more than 30 days ago
     const result = await Appointment.deleteMany({
       status: STATUSES.COMPLETED,

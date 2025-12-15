@@ -54,8 +54,6 @@ const startServer = async () => {
       console.log(`📡 API Base URL: http://localhost:${port}`);
       console.log(`🔌 Socket.IO: Enabled`);
       console.log(`💾 Database: Connected`);
-      console.log('═══════════════════════════════════════════════════════════');
-      console.log('');
       console.log('📌 API Endpoints:');
       console.log(`   Health Check:     GET  http://localhost:${port}/health`);
       console.log(`   Register:         POST http://localhost:${port}/api/auth/register`);
@@ -68,8 +66,7 @@ const startServer = async () => {
       console.log(`   Cancel Appt:      PATCH http://localhost:${port}/api/appointments/:id/cancel`);
       console.log(`   Admin Appts:      GET  http://localhost:${port}/api/admin/appointments`);
       console.log(`   Update Status:    PATCH http://localhost:${port}/api/admin/appointments/:id`);
-      console.log('═══════════════════════════════════════════════════════════');
-      console.log('');
+
     });
 
     // Graceful shutdown
